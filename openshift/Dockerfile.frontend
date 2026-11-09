@@ -1,0 +1,14 @@
+# ==============================================================================
+# DOCTOR CONNECT - OPENSHIFT FRONTEND CONTAINER
+# Unprivileged Nginx listening on port 8080 (OpenShift SCC Compliant)
+# ==============================================================================
+
+FROM nginxinc/nginx-unprivileged:alpine
+
+# Copy static frontend assets to nginx html directory
+COPY ../frontend /usr/share/nginx/html
+
+# Expose non-root port 8080
+EXPOSE 8080
+
+CMD ["nginx", "-g", "daemon off;"]

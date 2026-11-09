@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doctor Console - DoctorConnect</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- TOP ROLE SWITCHER BAR -->
+<div class="demo-top-bar">
+    <div style="display:flex; align-items:center; gap:8px;">
+        <span style="background:#0d9488; color:white; padding:1px 6px; border-radius:4px; font-weight:700;">DOCTOR WORKSTATION</span>
+        <span>Doctor: <strong>Dr. Sarah Jenkins</strong> (Cardiology Specialist)</span>
+    </div>
+    <div class="role-pills">
+        <a href="patient.html" class="role-pill" style="background:#0284c7; color:white;">Open Patient View in New Tab ↗</a>
+        <a href="admin.html" class="role-pill" style="background:#eab308; color:#0f172a;">Reception & TV Board 🏥</a>
+        <a href="index.html" class="role-pill" style="background:#334155; color:white;">Home</a>
+    </div>
+</div>
+
+<!-- NAVBAR -->
+<header class="navbar">
+    <div class="nav-container">
+        <a href="index.html" class="brand">
+            <div class="brand-icon">⚕</div>
+            <div>Doctor<span>Connect</span></div>
+        </a>
+        <nav>
+            <ul class="nav-links">
+                <li><a href="javascript:void(0)" class="nav-tab-btn active" onclick="switchDocTab('workstation')">Live Workstation</a></li>
+                <li><a href="javascript:void(0)" class="nav-tab-btn" onclick="switchDocTab('queue')">Daily Queue Roster</a></li>
+                <li><a href="javascript:void(0)" class="nav-tab-btn" onclick="switchDocTab('prescriptions')">Past Consultations & Rx</a></li>
+            </ul>
+        </nav>
+    </div>
+</header>
+
+<main class="main-content">
+    <!-- HEADER -->
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; flex-wrap:wrap; gap:1rem;">
+        <div>
+            <h1 style="font-size:1.75rem; font-weight:800; color:#0f172a; margin-bottom:0.25rem;">
+                Dr. Sarah Jenkins &mdash; Cardiology Console 🩺
+            </h1>
+            <p style="color:#64748b; font-size:0.9rem; margin:0;" id="doctor-date-subtitle">
+                Live queue controller & real-time teleconsultation workstation
+            </p>
+        </div>
+
+        <div style="display:flex; gap:0.75rem; flex-wrap:wrap;">
+            <button type="button" class="btn btn-outline" onclick="openWalkinModal()">
+                + Add Walk-In Patient
+            </button>
+            <button type="button" class="btn btn-primary btn-lg" onclick="triggerCallNext()">
+                📢 Call Next Patient &rarr;
+            </button>
+        </div>
+    </div>
+
+    <!-- 4 KPI STAT CARDS -->
+    <div class="stats-grid">
+        <div class="stat-card stat-success">
+            <div class="stat-icon">👨‍⚕️</div>
+            <div>
+                <div id="kpi-serving" class="stat-val" style="color:#059669;">-</div>
+                <div class="stat-label">Currently Serving</div>
+            </div>
+        </div>
+
+        <div class="stat-card stat-warning">
+            <div class="stat-icon">⏳</div>
+            <div>
+                <div id="kpi-waiting" class="stat-val" style="color:#d97706;">-</div>
+                <div class="stat-label">Patients Waiting</div>
+            </div>
+        </div>
+
+        <div class="stat-card stat-primary">
+            <div class="stat-icon">✓</div>
+            <div>
+                <div id="kpi-completed" class="stat-val" style="color:#0284c7;">-</div>
+                <div class="stat-label">Completed Today</div>
+            </div>
+        </div>
+
+        <div class="stat-card stat-danger">
+            <div class="stat-icon">✕</div>
+            <div>
+                <div id="kpi-noshow" class="stat-val" style="color:#dc2626;">-</div>
+                <div class="stat-label">No-Shows</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 1: LIVE WORKSTATION -->
+    <div id="doc-tab-workstation" class="doc-tab-pane">
+        <div class="grid-2" style="grid-template-columns: 1.15fr 1fr; align-items:start;">
+            <!-- LEFT: VIDEO ROOM -->
+            <div>
+                <div class="card" style="padding:0; overflow:hidden;">
+                    <div style="padding:0.75rem 1rem; background:#0f172a; color:white; display:flex; justify-content:space-between; align-items:center;">
+                        <div style="font-size:0.85rem; font-weight:600; display:flex; align-items:center; gap:6px;">
+                            <span class="pulse-dot" style="background:#10b981;"></span> Jitsi WebRTC Consultation Stream
+                        </div>
+                        <a id="video-ext-link" href="#" target="_blank" class="btn btn-sm btn-outline" style="color:white; border-color:#475569; padding:2px 8px; font-size:0.75rem;">Open Full Window ↗</a>
+                    </div>
+                    <div style="height:500px; background:#000;">
+                        <iframe id="doc-video-iframe" src="" allow="camera; microphone; fullscreen; display-capture; autoplay" style="width:100%; height:100%; border:none;"></iframe>
+                    </div>
+                </div>
+
+                <!-- PATIENT INFO CARD -->
+                <div class="card" style="margin-top:1rem; padding:1.25rem;">
+                    <h3 style="font-size:1.05rem; font-weight:700; color:#0f172a; margin-bottom:0.5rem;">Patient Details</h3>
+                    <div class="grid-2" style="font-size:0.875rem; margin-bottom:0.75rem;">
+                        <div><span style="color:#64748b;">Name:</span> <strong id="in-room-patient-name">-</strong></div>
+                        <div><span style="color:#64748b;">Phone:</span> <strong id="in-room-patient-phone">-</strong></div>
+                    </div>
+                    <div style="background:#f8fafc; border-left:3px solid #0284c7; padding:0.6rem 0.9rem; border-radius:4px; font-size:0.85rem;">
+                        <strong>Chief Complaint / Symptoms:</strong><br>
+                        <span id="in-room-patient-reason" style="color:#334155;">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT: PRESCRIPTION BUILDER & CONTROLS -->
+            <div>
+                <div class="card" style="padding:1.5rem;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; border-bottom:1px solid #f1f5f9; padding-bottom:0.75rem;">
+                        <div>
+                            <span class="badge badge-serving" id="in-room-token-badge">TOKEN IN ROOM</span>
+                            <h2 style="font-size:1.25rem; font-weight:800; color:#0f172a; margin-top:4px;" id="in-room-title">No Patient In Room</h2>
+                        </div>
+                        <span class="rx-symbol" style="font-size:1.8rem;">℞</span>
+                    </div>
+
+                    <form id="doc-rx-form" onsubmit="handleSaveRx(event)">
+                        <div class="form-group">
+                            <label class="form-label" for="doc_diagnosis">Clinical Diagnosis / Impression *</label>
+                            <input type="text" id="doc_diagnosis" class="form-control" required placeholder="e.g. Mild Essential Hypertension / Viral Rhinopharyngitis">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="doc_prescription">Medications & Rx Instructions *</label>
+                            <textarea id="doc_prescription" class="form-control" rows="8" style="font-family:monospace; font-size:0.9rem;" required placeholder="1. Medication name, dosage & frequency&#10;2. Dietary advice & precautions&#10;3. Follow-up consultation date"></textarea>
+                            <div class="form-text">Will be saved directly to the patient's digital record.</div>
+                        </div>
+
+                        <div style="display:flex; gap:0.75rem; margin-top:1.5rem;">
+                            <button type="submit" id="btn-save-rx" class="btn btn-primary btn-lg" style="flex:1;">
+                                ✓ Save Rx & End Visit
+                            </button>
+                            <button type="button" class="btn btn-outline" onclick="triggerMarkNoShow()">
+                                No-Show
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 2: DAILY QUEUE ROSTER -->
+    <div id="doc-tab-queue" class="doc-tab-pane" style="display:none;">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Today's Patient Queue Roster</h3>
+                <span style="font-size:0.85rem; color:#64748b;">Updates in real-time</span>
+            </div>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Token #</th>
+                            <th>Patient Name</th>
+                            <th>Contact</th>
+                            <th>Est. Time</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="doc-queue-table-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 3: PAST CONSULTATIONS -->
+    <div id="doc-tab-prescriptions" class="doc-tab-pane" style="display:none;">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Completed Consultations & Issued Prescriptions</h3>
+            </div>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Token #</th>
+                            <th>Patient Name</th>
+                            <th>Diagnosis</th>
+                            <th>Prescription Summary</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="doc-history-table-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- WALK-IN PATIENT MODAL -->
+<div id="walkin-modal" class="modal-overlay">
+    <div class="modal-box">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem;">
+            <h3 style="margin:0; font-size:1.2rem; font-weight:800; color:#0f172a;">Issue Walk-In Token</h3>
+            <button type="button" onclick="closeWalkinModal()" style="background:none; border:none; font-size:1.5rem; cursor:pointer; color:#64748b;">&times;</button>
+        </div>
+
+        <form id="walkin-form" onsubmit="handleWalkinSubmit(event)">
+            <div class="form-group">
+                <label class="form-label" for="walkin_name">Patient Full Name *</label>
+                <input type="text" id="walkin_name" class="form-control" required placeholder="Full Name">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="walkin_phone">Phone Number</label>
+                <input type="tel" id="walkin_phone" class="form-control" placeholder="+1 555-0000">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="walkin_reason">Reason for Visit</label>
+                <input type="text" id="walkin_reason" class="form-control" placeholder="Symptoms / consultation purpose">
+            </div>
+
+            <div style="display:flex; gap:0.5rem; justify-content:flex-end; margin-top:1.5rem;">
+                <button type="button" class="btn btn-outline" onclick="closeWalkinModal()">Cancel</button>
+                <button type="submit" class="btn btn-teal">Issue Token &rarr;</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<footer class="footer">
+    <div style="max-width:1240px; margin:0 auto; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
+        <div><strong>DoctorConnect</strong> &copy; 2026 &mdash; Token-Based Telehealth Platform (Frontend Standalone)</div>
+        <div><span class="pulse-dot"></span> State Engine Active (Local Storage Sync)</div>
+    </div>
+</footer>
+
+<script src="js/app.js"></script>
+<script>
+const doctorId = 1; // Dr. Sarah Jenkins
+let activeServingAppointmentId = null;
+
+function switchDocTab(tabName) {
+    document.querySelectorAll('.doc-tab-pane').forEach(el => el.style.display = 'none');
+    document.querySelectorAll('.nav-tab-btn').forEach(el => el.classList.remove('active'));
+
+    document.getElementById(`doc-tab-${tabName}`).style.display = 'block';
+    const btn = Array.from(document.querySelectorAll('.nav-tab-btn')).find(el => el.textContent.toLowerCase().includes(tabName));
+    if (btn) btn.classList.add('active');
+
+    renderDoctorDashboard();
+}
+
+function renderDoctorDashboard() {
+    const today = new Date().toISOString().split('T')[0];
+    const q = QueueEngine.getDoctorQueue(doctorId, today);
+    const state = DCStore.load();
+
+    document.getElementById('doctor-date-subtitle').textContent = `Today: ${new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`;
+
+    // KPIs
+    document.getElementById('kpi-serving').textContent = q.current_serving_token ? '#' + q.current_serving_token : 'None';
+    document.getElementById('kpi-waiting').textContent = q.waiting_count;
+    document.getElementById('kpi-completed').textContent = q.completed_count;
+    document.getElementById('kpi-noshow').textContent = q.no_show_count;
+
+    // Currently Serving
+    const serving = q.current_serving;
+    if (serving) {
+        activeServingAppointmentId = serving.id;
+        document.getElementById('in-room-title').textContent = `${serving.patient_name} (Token #${serving.token_number})`;
+        document.getElementById('in-room-token-badge').textContent = `TOKEN #${serving.token_number} SERVING`;
+        document.getElementById('in-room-patient-name').textContent = serving.patient_name;
+        document.getElementById('in-room-patient-phone').textContent = serving.patient_phone;
+        document.getElementById('in-room-patient-reason').textContent = serving.reason || 'General Consultation';
+
+        document.getElementById('doc-diagnosis').value = serving.diagnosis || '';
+        document.getElementById('doc-prescription').value = serving.prescription || '';
+        document.getElementById('btn-save-rx').disabled = false;
+
+        const iframe = document.getElementById('doc-video-iframe');
+        if (!iframe.src || !iframe.src.includes(`appt-${serving.id}`)) {
+            iframe.src = serving.meeting_link + '#userInfo.displayName=Dr.+Sarah+Jenkins';
+            document.getElementById('video-ext-link').href = serving.meeting_link;
+        }
+    } else {
+        activeServingAppointmentId = null;
+        document.getElementById('in-room-title').textContent = 'No Patient In Room';
+        document.getElementById('in-room-token-badge').textContent = 'ROOM EMPTY';
+        document.getElementById('in-room-patient-name').textContent = '-';
+        document.getElementById('in-room-patient-phone').textContent = '-';
+        document.getElementById('in-room-patient-reason').textContent = 'Queue is empty or waiting for doctor to call next.';
+        document.getElementById('btn-save-rx').disabled = true;
+    }
+
+    // Daily Roster Table
+    const tbodyQueue = document.getElementById('doc-queue-table-body');
+    if (tbodyQueue) {
+        tbodyQueue.innerHTML = q.tokens.map(t => `
+            <tr style="${t.status === 'serving' ? 'background:#ecfdf5;' : ''}">
+                <td><strong style="color:#0284c7; font-size:1.1rem;">#${t.token_number}</strong></td>
+                <td><strong>${t.patient_name}</strong><br><span style="font-size:0.8rem; color:#64748b;">${t.reason || ''}</span></td>
+                <td>${t.patient_phone}</td>
+                <td>${t.estimated_time.split(' ')[1]}</td>
+                <td><span class="badge badge-${t.status}">${t.status.toUpperCase()} ${t.status === 'serving' ? '<span class="pulse-dot"></span>' : ''}</span></td>
+                <td>
+                    ${t.status === 'waiting' ? `
+                        <button class="btn btn-sm btn-primary" onclick="setTokenStatus(${t.id}, 'serving')">Call</button>
+                        <button class="btn btn-sm btn-outline" onclick="setTokenStatus(${t.id}, 'no_show')">No-Show</button>
+                    ` : (t.status === 'serving' ? `
+                        <button class="btn btn-sm btn-teal" onclick="switchDocTab('workstation')">In Call 📹</button>
+                        <button class="btn btn-sm btn-outline" onclick="setTokenStatus(${t.id}, 'completed')">Complete</button>
+                    ` : (t.status === 'completed' && t.prescription ? `<span style="color:#059669; font-size:0.85rem; font-weight:600;">✓ Rx Saved</span>` : '-'))}
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    // Past History Table
+    const tbodyHistory = document.getElementById('doc-history-table-body');
+    if (tbodyHistory) {
+        const completed = state.appointments.filter(a => a.doctor_id === doctorId && a.status === 'completed');
+        tbodyHistory.innerHTML = completed.map(c => `
+            <tr>
+                <td>${c.date}</td>
+                <td><strong style="color:#0284c7;">#${c.token_number}</strong></td>
+                <td><strong>${c.patient_name}</strong><br><span style="font-size:0.8rem; color:#64748b;">${c.patient_phone}</span></td>
+                <td><strong>${c.diagnosis || 'Routine Checkup'}</strong></td>
+                <td><span style="font-family:monospace; font-size:0.85rem; color:#475569;">${(c.prescription || '').slice(0, 60)}...</span></td>
+                <td><a href="patient.html" class="btn btn-sm btn-outline" onclick="localStorage.setItem('view_rx_id', ${c.id})">View</a></td>
+            </tr>
+        `).join('');
+    }
+}
+
+function triggerCallNext() {
+    const res = QueueEngine.callNext(doctorId);
+    alert(res.message);
+    renderDoctorDashboard();
+}
+
+function setTokenStatus(appointmentId, status) {
+    QueueEngine.setStatus(appointmentId, status);
+    renderDoctorDashboard();
+}
+
+function triggerMarkNoShow() {
+    if (!activeServingAppointmentId) return;
+    if (confirm('Mark this patient as No-Show and remove from consultation room?')) {
+        QueueEngine.setStatus(activeServingAppointmentId, 'no_show');
+        renderDoctorDashboard();
+    }
+}
+
+function handleSaveRx(e) {
+    e.preventDefault();
+    if (!activeServingAppointmentId) {
+        alert('No patient currently in consultation room.');
+        return;
+    }
+
+    const diag = document.getElementById('doc_diagnosis').value.trim();
+    const rx = document.getElementById('doc_prescription').value.trim();
+
+    const res = QueueEngine.completeConsultation(activeServingAppointmentId, diag, rx);
+    alert(res.message);
+    document.getElementById('doc-rx-form').reset();
+    renderDoctorDashboard();
+}
+
+// Walk-in modal
+function openWalkinModal() { document.getElementById('walkin-modal').style.display = 'flex'; }
+function closeWalkinModal() { document.getElementById('walkin-modal').style.display = 'none'; }
+
+function handleWalkinSubmit(e) {
+    e.preventDefault();
+    const name = document.getElementById('walkin_name').value.trim();
+    const phone = document.getElementById('walkin_phone').value.trim();
+    const reason = document.getElementById('walkin_reason').value.trim();
+    const today = new Date().toISOString().split('T')[0];
+
+    const res = QueueEngine.bookToken(name, phone, doctorId, today, reason);
+    if (res.success) {
+        alert(`✓ Walk-in Token #${res.appointment.token_number} issued successfully for ${name}.`);
+        closeWalkinModal();
+        document.getElementById('walkin-form').reset();
+        renderDoctorDashboard();
+    }
+}
+
+// Auto-sync across tabs
+window.addEventListener('storage', renderDoctorDashboard);
+window.addEventListener('dc_state_updated', renderDoctorDashboard);
+setInterval(renderDoctorDashboard, 2000);
+
+document.addEventListener('DOMContentLoaded', renderDoctorDashboard);
+</script>
+
+</body>
+</html>

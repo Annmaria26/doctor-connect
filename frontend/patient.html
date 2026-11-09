@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patient Portal - DoctorConnect</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- TOP ROLE SWITCHER BAR -->
+<div class="demo-top-bar">
+    <div style="display:flex; align-items:center; gap:8px;">
+        <span style="background:#0284c7; color:white; padding:1px 6px; border-radius:4px; font-weight:700;">PATIENT VIEW</span>
+        <span>Logged in as: <strong>John Doe</strong> (john.doe@gmail.com)</span>
+    </div>
+    <div class="role-pills">
+        <a href="doctor.html" class="role-pill" style="background:#0d9488; color:white;">Switch to Doctor View 🩺</a>
+        <a href="admin.html" class="role-pill" style="background:#eab308; color:#0f172a;">Switch to Reception View 🏥</a>
+        <a href="index.html" class="role-pill" style="background:#334155; color:white;">Home</a>
+    </div>
+</div>
+
+<!-- NAVBAR -->
+<header class="navbar">
+    <div class="nav-container">
+        <a href="index.html" class="brand">
+            <div class="brand-icon">⚕</div>
+            <div>Doctor<span>Connect</span></div>
+        </a>
+        <nav>
+            <ul class="nav-links">
+                <li><a href="javascript:void(0)" class="nav-tab-btn active" onclick="switchTab('queue')">Live Waiting Room</a></li>
+                <li><a href="javascript:void(0)" class="nav-tab-btn" onclick="switchTab('book')">+ Book New Token</a></li>
+                <li><a href="javascript:void(0)" class="nav-tab-btn" onclick="switchTab('history')">My History</a></li>
+            </ul>
+        </nav>
+    </div>
+</header>
+
+<main class="main-content">
+    <!-- TAB 1: LIVE WAITING ROOM -->
+    <div id="tab-queue" class="tab-pane">
+        <!-- HEADER -->
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; flex-wrap:wrap; gap:1rem;">
+            <div>
+                <h1 style="font-size:1.75rem; font-weight:800; color:#0f172a; margin-bottom:0.25rem;">
+                    Live Consultation Waiting Room
+                </h1>
+                <p style="color:#64748b; font-size:0.9rem; margin:0;" id="queue-subtitle">
+                    Tracking live queue position for today's appointment
+                </p>
+            </div>
+            <div style="display:flex; align-items:center; gap:0.75rem;">
+                <div style="display:flex; align-items:center; gap:6px; background:#ffffff; border:1px solid #cbd5e1; padding:6px 12px; border-radius:999px; font-size:0.8rem; font-weight:600; color:#334155;">
+                    <span class="pulse-dot"></span> Live Queue Active (2s Sync)
+                </div>
+                <button type="button" class="btn btn-outline btn-sm" onclick="AudioBell.playChime()" title="Test chime audio">
+                    🔔 Test Sound
+                </button>
+            </div>
+        </div>
+
+        <!-- MAIN PATIENT HERO CARD -->
+        <div class="queue-hero-card" id="patient-hero-card">
+            <div style="font-size:0.85rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; opacity:0.9;">
+                Your Assigned Consultation Token
+            </div>
+            <div class="token-circle-badge">
+                <div class="token-lbl">TOKEN</div>
+                <div class="token-num" id="my-token-number">#3</div>
+            </div>
+            <div style="display:flex; gap:1rem; align-items:center; margin-bottom:1rem;">
+                <span id="my-token-status" class="badge badge-waiting" style="font-size:0.95rem; padding:0.4rem 1.1rem;">
+                    WAITING
+                </span>
+            </div>
+            <div style="font-size:0.95rem; opacity:0.95;" id="my-estimated-time">
+                Estimated Meeting Time: <strong>Loading...</strong>
+            </div>
+        </div>
+
+        <!-- 3 LIVE METRIC COUNTERS -->
+        <div class="stats-grid">
+            <div class="stat-card stat-success">
+                <div class="stat-icon">👨‍⚕️</div>
+                <div>
+                    <div id="stat-current-serving" class="stat-val" style="color:#059669;">-</div>
+                    <div class="stat-label">Currently Serving Token</div>
+                </div>
+            </div>
+
+            <div class="stat-card stat-warning">
+                <div class="stat-icon">⏭</div>
+                <div>
+                    <div id="stat-next-token" class="stat-val" style="color:#d97706;">-</div>
+                    <div class="stat-label">Next in Line</div>
+                </div>
+            </div>
+
+            <div class="stat-card stat-primary">
+                <div class="stat-icon">⏳</div>
+                <div>
+                    <div id="stat-tokens-ahead" class="stat-val" style="color:#0284c7;">-</div>
+                    <div class="stat-label">Tokens Ahead of You</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DYNAMIC VIDEO CONSULTATION MEETING CONTAINER (CRITICAL REQUIREMENT) -->
+        <div id="meeting-banner-box" class="meeting-banner meeting-locked">
+            <!-- Dynamically populated based on lock/unlock status -->
+        </div>
+
+        <!-- EMBEDDED JITSI VIDEO ROOM (WHEN ACTIVE) -->
+        <div id="video-room-container" style="display:none; margin-bottom:2rem;">
+            <div class="card" style="padding:0; overflow:hidden;">
+                <div style="background:#0f172a; color:white; padding:0.75rem 1rem; display:flex; justify-content:space-between; align-items:center;">
+                    <div style="display:flex; align-items:center; gap:8px; font-weight:600; font-size:0.9rem;">
+                        <span class="pulse-dot"></span> Live Video Consultation Session
+                    </div>
+                    <button class="btn btn-sm btn-outline" style="color:white; border-color:#475569;" onclick="document.getElementById('video-room-container').style.display='none'">Close Video Window</button>
+                </div>
+                <div class="video-frame-container">
+                    <iframe id="video-iframe" src="" allow="camera; microphone; fullscreen; display-capture; autoplay"></iframe>
+                </div>
+            </div>
+        </div>
+
+        <!-- TODAY'S FULL QUEUE LIST -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Today's Clinic Queue Roster</h3>
+                <span style="font-size:0.85rem; color:#64748b;" id="queue-roster-count">Real-time status</span>
+            </div>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Token #</th>
+                            <th>Patient</th>
+                            <th>Est. Time</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="queue-roster-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 2: BOOK ONLINE TOKEN -->
+    <div id="tab-book" class="tab-pane" style="display:none; max-width:800px; margin:0 auto;">
+        <div style="margin-bottom:1.5rem;">
+            <h1 style="font-size:1.75rem; font-weight:800; color:#0f172a; margin-bottom:0.25rem;">
+                Book an Online Consultation Token
+            </h1>
+            <p style="color:#64748b; font-size:0.9rem; margin:0;">
+                Select a doctor and date. Tokens are assigned atomically and sequentially.
+            </p>
+        </div>
+
+        <div class="grid-2" style="grid-template-columns: 1.3fr 1fr; align-items:start;">
+            <!-- FORM -->
+            <div class="card">
+                <form id="booking-form" onsubmit="handleBookSubmit(event)">
+                    <div class="form-group">
+                        <label class="form-label" for="book_patient_name">Your Name *</label>
+                        <input type="text" id="book_patient_name" class="form-control" required value="John Doe">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="book_doctor_id">Select Doctor / Specialist *</label>
+                        <select id="book_doctor_id" class="form-select" required onchange="updateBookingPreview()"></select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="book_date">Consultation Date *</label>
+                        <input type="date" id="book_date" class="form-control" required onchange="updateBookingPreview()">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="book_reason">Reason for Visit / Symptoms</label>
+                        <textarea id="book_reason" class="form-control" rows="3" placeholder="Describe symptoms or reasons for consultation..."></textarea>
+                    </div>
+
+                    <div style="margin-top:1.5rem;">
+                        <button type="submit" class="btn btn-teal btn-lg" style="width:100%;">
+                            Confirm & Issue Token &rarr;
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- LIVE PREVIEW CARD -->
+            <div class="card" style="background:linear-gradient(135deg, #f8fafc, #e0f2fe); border:1px solid #bfdbfe;">
+                <h3 style="font-size:1rem; font-weight:700; color:#0369a1; margin-bottom:1rem;">
+                    🎫 Token Order Preview
+                </h3>
+                <div style="background:white; border-radius:8px; padding:1.25rem; text-align:center; box-shadow:var(--shadow-sm); margin-bottom:1.25rem;">
+                    <div style="font-size:0.75rem; text-transform:uppercase; color:#64748b; font-weight:700;">Projected Token #</div>
+                    <div id="preview-token-num" style="font-size:2.8rem; font-weight:800; color:#0284c7; line-height:1.2;">#1</div>
+                    <div style="font-size:0.8rem; color:#64748b; margin-top:4px;">First available token for date</div>
+                </div>
+
+                <div style="font-size:0.875rem; color:#334155; line-height:1.8;">
+                    <div style="display:flex; justify-content:space-between;">
+                        <span style="color:#64748b;">Specialist:</span>
+                        <strong id="preview-doctor-name">-</strong>
+                    </div>
+                    <div style="display:flex; justify-content:space-between;">
+                        <span style="color:#64748b;">Consultation Fee:</span>
+                        <strong id="preview-fee" style="color:#0f766e;">-</strong>
+                    </div>
+                    <div style="display:flex; justify-content:space-between;">
+                        <span style="color:#64748b;">Est. Meeting Time:</span>
+                        <strong id="preview-est-time">-</strong>
+                    </div>
+                </div>
+
+                <hr style="border:none; border-top:1px dashed #cbd5e1; margin:1rem 0;">
+                <p style="font-size:0.75rem; color:#64748b; margin:0; line-height:1.4;">
+                    🔒 <strong>Privacy Rule:</strong> Video room link activates automatically when your token is called or next in line.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 3: HISTORY -->
+    <div id="tab-history" class="tab-pane" style="display:none;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+            <div>
+                <h1 style="font-size:1.75rem; font-weight:800; color:#0f172a; margin-bottom:0.25rem;">My Consultation Records</h1>
+                <p style="color:#64748b; font-size:0.9rem; margin:0;">Past consultations, doctor notes, and clinical prescriptions</p>
+            </div>
+            <button class="btn btn-primary" onclick="switchTab('book')">+ Book New Token</button>
+        </div>
+
+        <div class="card">
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Token #</th>
+                            <th>Date</th>
+                            <th>Doctor</th>
+                            <th>Reason / Symptoms</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="history-table-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- PRESCRIPTION MODAL SHEET -->
+<div id="rx-modal" class="modal-overlay">
+    <div class="modal-box" style="max-width:700px; max-height:90vh; overflow-y:auto;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem;" class="no-print">
+            <h3 style="margin:0; font-size:1.2rem; font-weight:800; color:#0f172a;">Doctor's Prescription</h3>
+            <div style="display:flex; gap:0.5rem;">
+                <button class="btn btn-sm btn-primary" onclick="window.print()">🖨 Print / PDF</button>
+                <button class="btn btn-sm btn-outline" onclick="closeRxModal()">Close</button>
+            </div>
+        </div>
+
+        <div id="rx-sheet-content" class="prescription-sheet" style="padding:1.5rem; border:1px solid #e2e8f0;"></div>
+    </div>
+</div>
+
+<footer class="footer">
+    <div style="max-width:1240px; margin:0 auto; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
+        <div><strong>DoctorConnect</strong> &copy; 2026 &mdash; Token-Based Telehealth Platform (Frontend Standalone)</div>
+        <div><span class="pulse-dot"></span> State Engine Active (Local Storage Sync)</div>
+    </div>
+</footer>
+
+<script src="js/app.js"></script>
+<script>
+let activeDoctorId = 1;
+let myCurrentAppointmentId = 103; // Default to Token #3 (Robert Brown / John Doe)
+
+function switchTab(tabName) {
+    document.querySelectorAll('.tab-pane').forEach(el => el.style.display = 'none');
+    document.querySelectorAll('.nav-tab-btn').forEach(el => el.classList.remove('active'));
+
+    document.getElementById(`tab-${tabName}`).style.display = 'block';
+    const activeBtn = Array.from(document.querySelectorAll('.nav-tab-btn')).find(el => el.textContent.toLowerCase().includes(tabName));
+    if (activeBtn) activeBtn.classList.add('active');
+
+    if (tabName === 'queue') renderQueue();
+    if (tabName === 'history') renderHistory();
+    if (tabName === 'book') initBookingForm();
+}
+
+function initBookingForm() {
+    const state = DCStore.load();
+    const docSelect = document.getElementById('book_doctor_id');
+    docSelect.innerHTML = state.doctors.map(d => `<option value="${d.id}" ${d.id === activeDoctorId ? 'selected' : ''}>${d.name} &mdash; ${d.specialization} ($${d.fee.toFixed(2)})</option>`).join('');
+    
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('book_date').min = today;
+    document.getElementById('book_date').value = today;
+    updateBookingPreview();
+}
+
+function updateBookingPreview() {
+    const state = DCStore.load();
+    const docId = parseInt(document.getElementById('book_doctor_id').value, 10);
+    const date = document.getElementById('book_date').value;
+    const doctor = state.doctors.find(d => d.id === docId);
+
+    if (!doctor) return;
+
+    document.getElementById('preview-doctor-name').textContent = doctor.name + ' (' + doctor.specialization + ')';
+    document.getElementById('preview-fee').textContent = '$' + doctor.fee.toFixed(2);
+
+    // Compute next token
+    const existingTokens = state.appointments
+        .filter(a => a.doctor_id === docId && a.date === date)
+        .map(a => a.token_number);
+    const nextToken = existingTokens.length > 0 ? Math.max(...existingTokens) + 1 : 1;
+
+    document.getElementById('preview-token-num').textContent = '#' + nextToken;
+
+    // Projected time
+    const startParts = (doctor.start_time || '09:00').split(':');
+    const startHours = parseInt(startParts[0], 10);
+    const startMins = parseInt(startParts[1], 10);
+    const totalOffsetMins = (nextToken - 1) * (doctor.avg_mins || 15);
+    const finalHours = Math.floor((startMins + totalOffsetMins) / 60) + startHours;
+    const finalMins = (startMins + totalOffsetMins) % 60;
+    const ampm = finalHours >= 12 ? 'PM' : 'AM';
+    const displayHours = finalHours % 12 || 12;
+
+    document.getElementById('preview-est-time').textContent = `${displayHours.toString().padStart(2, '0')}:${finalMins.toString().padStart(2, '0')} ${ampm}`;
+}
+
+function handleBookSubmit(e) {
+    e.preventDefault();
+    const name = document.getElementById('book_patient_name').value.trim();
+    const docId = parseInt(document.getElementById('book_doctor_id').value, 10);
+    const date = document.getElementById('book_date').value;
+    const reason = document.getElementById('book_reason').value.trim();
+
+    const res = QueueEngine.bookToken(name, '+1 555-0101', docId, date, reason);
+    if (res.success) {
+        myCurrentAppointmentId = res.appointment.id;
+        activeDoctorId = docId;
+        alert(`🎉 Confirmed! You have been allocated Token #${res.appointment.token_number}.`);
+        switchTab('queue');
+    }
+}
+
+// Live Queue Renderer
+let lastTokenStatus = null;
+
+function renderQueue() {
+    const state = DCStore.load();
+    const today = new Date().toISOString().split('T')[0];
+
+    // Find patient's appointment
+    let myAppt = state.appointments.find(a => a.id === myCurrentAppointmentId);
+    if (!myAppt) {
+        // Fallback to latest appointment
+        myAppt = state.appointments[state.appointments.length - 1];
+        if (myAppt) myCurrentAppointmentId = myAppt.id;
+    }
+
+    if (!myAppt) return;
+
+    activeDoctorId = myAppt.doctor_id;
+    const doctor = state.doctors.find(d => d.id === activeDoctorId) || state.doctors[0];
+    const q = QueueEngine.getDoctorQueue(activeDoctorId, myAppt.date);
+
+    // Update UI elements
+    document.getElementById('queue-subtitle').innerHTML = `Doctor: <strong>${doctor.name}</strong> (${doctor.specialization}) &bull; Date: ${myAppt.date}`;
+    document.getElementById('my-token-number').textContent = '#' + myAppt.token_number;
+
+    const statusBadge = document.getElementById('my-token-status');
+    statusBadge.className = `badge badge-${myAppt.status}`;
+    statusBadge.innerHTML = `${myAppt.status.toUpperCase()} ${myAppt.status === 'serving' ? '<span class="pulse-dot"></span>' : ''}`;
+
+    document.getElementById('my-estimated-time').innerHTML = `Estimated Meeting Time: <strong>${myAppt.estimated_time}</strong>`;
+
+    document.getElementById('stat-current-serving').textContent = q.current_serving_token ? '#' + q.current_serving_token : 'None';
+    document.getElementById('stat-next-token').textContent = q.next_waiting_token ? '#' + q.next_waiting_token : 'None';
+
+    // Calculate tokens ahead
+    const tokensAhead = state.appointments.filter(a => a.doctor_id === activeDoctorId && a.date === myAppt.date && a.status === 'waiting' && a.token_number < myAppt.token_number).length;
+    document.getElementById('stat-tokens-ahead').textContent = myAppt.status === 'waiting' ? tokensAhead : '0';
+
+    // UNLOCK LOGIC: UNLOCKED ONLY WHEN SERVING OR NEXT!
+    const isServing = (myAppt.status === 'serving');
+    const isNext = (myAppt.status === 'waiting' && myAppt.token_number === q.next_waiting_token);
+    const canJoin = isServing || isNext;
+
+    // Check if status newly transitioned to serving/next -> sound chime!
+    if (lastTokenStatus && lastTokenStatus !== myAppt.status) {
+        if (isServing || isNext) {
+            AudioBell.playChime();
+        }
+    }
+    lastTokenStatus = myAppt.status;
+
+    const bannerBox = document.getElementById('meeting-banner-box');
+    if (canJoin) {
+        bannerBox.className = 'meeting-banner meeting-unlocked';
+        bannerBox.innerHTML = `
+            <div style="font-size:2.2rem; margin-bottom:0.5rem;">🎉</div>
+            <h3 style="color:#065f46; margin-bottom:0.4rem; font-size:1.35rem;">It's Your Turn! Video Consultation Ready</h3>
+            <p style="color:#047857; margin-bottom:1.25rem; max-width:550px;">
+                The doctor is ready for your consultation. Please join the video room now.
+            </p>
+            <div style="display:flex; gap:0.75rem; flex-wrap:wrap; justify-content:center;">
+                <button type="button" class="btn btn-teal btn-lg" onclick="startVideoMeeting('${myAppt.meeting_link}')" style="box-shadow:0 4px 12px rgba(13,148,136,0.35);">
+                    📹 Enter Video Consultation Room
+                </button>
+                <a href="${myAppt.meeting_link}" target="_blank" class="btn btn-outline btn-lg">
+                    Open in New Tab ↗
+                </a>
+            </div>
+        `;
+    } else if (myAppt.status === 'completed') {
+        bannerBox.className = 'meeting-banner';
+        bannerBox.style.background = '#f1f5f9';
+        bannerBox.style.border = '1px solid #cbd5e1';
+        bannerBox.innerHTML = `
+            <h3 style="color:#334155; margin-bottom:0.5rem;">Consultation Concluded</h3>
+            <p style="color:#64748b; margin-bottom:1rem;">Your consultation with ${doctor.name} has ended.</p>
+            <button class="btn btn-primary" onclick="openPrescription(${myAppt.id})">
+                📄 View / Print Doctor's Prescription
+            </button>
+        `;
+    } else {
+        bannerBox.className = 'meeting-banner meeting-locked';
+        bannerBox.innerHTML = `
+            <div style="font-size:1.8rem; margin-bottom:0.5rem;">🔒</div>
+            <h3 style="color:#334155; margin-bottom:0.4rem; font-size:1.15rem;">Video Consultation Room Locked</h3>
+            <p style="color:#64748b; margin:0; max-width:550px; font-size:0.9rem;">
+                Per clinic privacy rules, your private video room unlocks automatically when your token is <strong>NEXT</strong> or <strong>SERVING</strong>.
+                You will hear a chime and this card will turn green when ready.
+            </p>
+        `;
+    }
+
+    // Queue roster table
+    const tbody = document.getElementById('queue-roster-body');
+    tbody.innerHTML = q.tokens.map(t => `
+        <tr style="${t.id === myAppt.id ? 'background:#e0f2fe; font-weight:700;' : (t.status === 'serving' ? 'background:#ecfdf5;' : '')}">
+            <td>
+                #${t.token_number}
+                ${t.id === myAppt.id ? '<span class="badge" style="background:#0284c7; color:white; font-size:0.7rem; margin-left:4px;">YOU</span>' : ''}
+            </td>
+            <td>${t.id === myAppt.id ? t.patient_name : (t.patient_name.charAt(0) + '*** ' + t.patient_name.slice(-1))}</td>
+            <td>${t.estimated_time.split(' ')[1]}</td>
+            <td><span class="badge badge-${t.status}">${t.status.toUpperCase()} ${t.status === 'serving' ? '<span class="pulse-dot"></span>' : ''}</span></td>
+        </tr>
+    `).join('');
+}
+
+function startVideoMeeting(link) {
+    const container = document.getElementById('video-room-container');
+    const iframe = document.getElementById('video-iframe');
+    iframe.src = link + '#userInfo.displayName=Patient+John+Doe';
+    container.style.display = 'block';
+    container.scrollIntoView({ behavior: 'smooth' });
+}
+
+function renderHistory() {
+    const state = DCStore.load();
+    const tbody = document.getElementById('history-table-body');
+    tbody.innerHTML = state.appointments.map(a => {
+        const doc = state.doctors.find(d => d.id === a.doctor_id) || {};
+        return `
+            <tr>
+                <td><strong style="color:#0284c7;">#${a.token_number}</strong></td>
+                <td>${a.date}</td>
+                <td><strong>${doc.name || 'Doctor'}</strong><br><span style="font-size:0.8rem; color:#64748b;">${doc.specialization || ''}</span></td>
+                <td>${a.reason || 'Routine checkup'}</td>
+                <td><span class="badge badge-${a.status}">${a.status.toUpperCase()}</span></td>
+                <td>
+                    ${a.status === 'completed' ? `<button class="btn btn-sm btn-outline" onclick="openPrescription(${a.id})">📄 View Rx</button>` : `<button class="btn btn-sm btn-primary" onclick="myCurrentAppointmentId=${a.id}; switchTab('queue');">View Queue</button>`}
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function openPrescription(appointmentId) {
+    const state = DCStore.load();
+    const appt = state.appointments.find(a => a.id === appointmentId);
+    if (!appt) return;
+
+    const doc = state.doctors.find(d => d.id === appt.doctor_id) || {};
+    const settings = state.clinic_settings;
+
+    const content = document.getElementById('rx-sheet-content');
+    content.innerHTML = `
+        <div class="rx-header">
+            <div>
+                <div style="font-size:1.35rem; font-weight:800; color:#0f172a;">${settings.clinic_name}</div>
+                <div style="font-size:0.85rem; color:#64748b;">${settings.clinic_address}</div>
+                <div style="font-size:0.85rem; color:#64748b;">Phone: ${settings.clinic_phone} &bull; Email: ${settings.clinic_email}</div>
+            </div>
+            <div style="text-align:right;">
+                <div style="font-size:1.15rem; font-weight:700; color:#0284c7;">${doc.name}</div>
+                <div style="font-size:0.85rem; font-weight:600; color:#0f766e;">${doc.specialization}</div>
+            </div>
+        </div>
+
+        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:1rem; margin-bottom:1.5rem; font-size:0.9rem;">
+            <div class="grid-3">
+                <div><span style="color:#64748b; font-size:0.8rem; display:block;">PATIENT</span><strong>${appt.patient_name}</strong></div>
+                <div><span style="color:#64748b; font-size:0.8rem; display:block;">CONTACT</span><strong>${appt.patient_phone}</strong></div>
+                <div><span style="color:#64748b; font-size:0.8rem; display:block;">DATE & TOKEN</span><strong>${appt.date} &bull; Token #${appt.token_number}</strong></div>
+            </div>
+        </div>
+
+        <div style="margin-bottom:1.5rem;">
+            <h4 style="font-size:0.95rem; font-weight:700; text-transform:uppercase; color:#475569; margin-bottom:0.4rem;">Clinical Diagnosis</h4>
+            <div style="background:#ffffff; border-left:4px solid #0284c7; padding:0.6rem 1rem; font-size:1rem; font-weight:600;">
+                ${appt.diagnosis || 'Clinical evaluation and routine checkup'}
+            </div>
+        </div>
+
+        <div style="margin-bottom:2rem;">
+            <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.5rem;">
+                <span class="rx-symbol">℞</span>
+                <span style="font-size:1rem; font-weight:700; text-transform:uppercase;">Medications & Instructions</span>
+            </div>
+            <div style="background:#ffffff; border:1px solid #cbd5e1; border-radius:6px; padding:1.25rem; font-family:monospace; font-size:0.95rem; line-height:1.7; white-space:pre-wrap;">
+${appt.prescription || 'No specific pharmaceutical prescriptions issued.'}
+            </div>
+        </div>
+
+        <div style="border-top:2px solid #e2e8f0; padding-top:1.25rem; display:flex; justify-content:space-between; align-items:flex-end;">
+            <div style="font-size:0.75rem; color:#94a3b8;">* Digitally signed telehealth prescription issued via DoctorConnect platform.</div>
+            <div style="text-align:right;">
+                <div style="font-family:serif; font-style:italic; font-size:1.15rem; border-bottom:1px solid #0f172a; min-width:160px; display:inline-block;">${doc.name}</div>
+                <div style="font-size:0.8rem; font-weight:600; color:#475569; margin-top:4px;">Medical Specialist</div>
+            </div>
+        </div>
+    `;
+
+    document.getElementById('rx-modal').style.display = 'flex';
+}
+
+function closeRxModal() {
+    document.getElementById('rx-modal').style.display = 'none';
+}
+
+// Auto-Sync across tabs: listen to storage and run 2s interval
+window.addEventListener('storage', renderQueue);
+window.addEventListener('dc_state_updated', renderQueue);
+setInterval(renderQueue, 2000);
+
+document.addEventListener('DOMContentLoaded', () => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('book')) {
+        if (params.get('doctor_id')) activeDoctorId = parseInt(params.get('doctor_id'), 10);
+        switchTab('book');
+    } else {
+        renderQueue();
+    }
+});
+</script>
+
+</body>
+</html>

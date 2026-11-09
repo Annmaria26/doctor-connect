@@ -1,0 +1,29 @@
+# ==============================================================================
+# DOCTOR CONNECT - OPENSHIFT PHP FULL-STACK CONTAINER
+# Built on Red Hat UBI 8 PHP 8.2 (Compliant with OpenShift Arbitrary UID / SCC)
+# ==============================================================================
+
+FROM registry.access.redhat.com/ubi8/php-82:latest
+
+USER 0
+
+# Install required PHP extensions (pdo_mysql)
+RUN dnf install -y php-mysqlnd php-pdo php-json php-mbstring && \
+    dnf clean all
+
+# Copy application files into Apache web root
+COPY --chown=1001:0 . /opt/app-root/src
+
+# Set proper group permissions for OpenShift non-root arbitrary UIDs
+RUN chgrp -R 0 /opt/app-root/src && \
+    chmod -R g+rwX /opt/app-root/src && \
+    mkdir -p /opt/app-root/src/sessions && \
+    chgrp -R 0 /opt/app-root/src/sessions && \
+    chmod -R g+rwx /opt/app-root/src/sessions
+
+# Switch back to non-root OpenShift default user
+USER 1001
+
+EXPOSE 8080
+
+CMD ["container-entrypoint", "/usr/libexec/s2i/run"]

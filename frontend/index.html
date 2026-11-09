@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DoctorConnect - Token-Based Consultation Platform (Frontend Standalone)</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- TOP ROLE SWITCHER BAR -->
+<div class="demo-top-bar">
+    <div style="display:flex; align-items:center; gap:8px;">
+        <span style="background:#0284c7; color:white; padding:1px 6px; border-radius:4px; font-weight:700;">PURE FRONTEND</span>
+        <span>Zero Backend Needed &bull; Runs completely in your browser</span>
+    </div>
+    <div class="role-pills">
+        <span style="color:#94a3b8;">Switch Portal:</span>
+        <a href="patient.html" class="role-pill" style="background:#0284c7; color:white;">👤 Patient Portal</a>
+        <a href="doctor.html" class="role-pill" style="background:#0d9488; color:white;">🩺 Doctor Console</a>
+        <a href="admin.html" class="role-pill" style="background:#eab308; color:#0f172a;">🏥 Reception & Admin</a>
+        <button onclick="if(confirm('Reset all demo tokens to initial state?')) { DCStore.reset(); alert('State reset!'); window.location.reload(); }" class="role-pill" style="background:#334155; color:#cbd5e1; border:none;">🔄 Reset Data</button>
+    </div>
+</div>
+
+<!-- NAVBAR -->
+<header class="navbar">
+    <div class="nav-container">
+        <a href="index.html" class="brand">
+            <div class="brand-icon">⚕</div>
+            <div>Doctor<span>Connect</span></div>
+        </a>
+        <nav>
+            <ul class="nav-links">
+                <li><a href="#how-it-works">How It Works</a></li>
+                <li><a href="#doctors">Find Specialists</a></li>
+                <li><a href="patient.html" class="btn btn-outline btn-sm">Patient Waiting Room</a></li>
+                <li><a href="patient.html?book=1" class="btn btn-primary btn-sm">+ Book Token</a></li>
+            </ul>
+        </nav>
+    </div>
+</header>
+
+<main class="main-content">
+    <!-- HERO -->
+    <div style="background: linear-gradient(135deg, #0f172a 0%, #0369a1 100%); color:white; border-radius:var(--radius-lg); padding:3.5rem 2rem; margin-bottom:2.5rem; text-align:center;">
+        <div style="max-width:820px; margin:0 auto;">
+            <span style="background:rgba(255,255,255,0.15); padding:0.35rem 0.9rem; border-radius:var(--radius-full); font-size:0.85rem; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; display:inline-block; margin-bottom:1.25rem;">
+                ✦ Live Queue & Video Consultation System
+            </span>
+            <h1 style="font-size:2.8rem; font-weight:800; line-height:1.2; margin-bottom:1.25rem;">
+                Skip the Waiting Room.<br><span style="color:#38bdf8;">Consult Your Doctor on Time.</span>
+            </h1>
+            <p style="font-size:1.15rem; color:#e0f2fe; margin-bottom:2rem; line-height:1.6;">
+                Book an instant online token. Watch your live queue position with sub-3s synchronization and chime notifications, then join your video consultation when your turn is called.
+            </p>
+            <div style="display:flex; justify-content:center; gap:1rem; flex-wrap:wrap;">
+                <a href="patient.html?book=1" class="btn btn-teal btn-lg" style="box-shadow:0 10px 20px rgba(13,148,136,0.35);">
+                    📅 Book Consultation Token Now
+                </a>
+                <a href="doctor.html" class="btn btn-outline btn-lg" style="background:rgba(255,255,255,0.1); border-color:rgba(255,255,255,0.3); color:white;">
+                    Doctor Queue Console &rarr;
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- QUICK PORTAL ACCESS CARDS -->
+    <div class="grid-3" style="margin-bottom:3rem;">
+        <div class="card" style="border-top:4px solid #0284c7;">
+            <div style="font-size:2rem; margin-bottom:0.5rem;">👤</div>
+            <h3 style="font-size:1.2rem; font-weight:700; color:#0f172a; margin-bottom:0.5rem;">Patient Portal</h3>
+            <p style="color:#64748b; font-size:0.9rem; margin-bottom:1.25rem;">Book tokens, track queue order, hear chime alert, and attend WebRTC video consultation.</p>
+            <a href="patient.html" class="btn btn-primary btn-sm" style="width:100%;">Open Patient Waiting Room &rarr;</a>
+        </div>
+
+        <div class="card" style="border-top:4px solid #0d9488;">
+            <div style="font-size:2rem; margin-bottom:0.5rem;">👨‍⚕️</div>
+            <h3 style="font-size:1.2rem; font-weight:700; color:#0f172a; margin-bottom:0.5rem;">Doctor Console</h3>
+            <p style="color:#64748b; font-size:0.9rem; margin-bottom:1.25rem;">Live queue roster, Call Next patient, video consultation station, and prescription builder.</p>
+            <a href="doctor.html" class="btn btn-teal btn-sm" style="width:100%;">Open Doctor Workstation &rarr;</a>
+        </div>
+
+        <div class="card" style="border-top:4px solid #eab308;">
+            <div style="font-size:2rem; margin-bottom:0.5rem;">🏥</div>
+            <h3 style="font-size:1.2rem; font-weight:700; color:#0f172a; margin-bottom:0.5rem;">Reception & TV Monitor</h3>
+            <p style="color:#64748b; font-size:0.9rem; margin-bottom:1.25rem;">Issue walk-in tokens, manage queues, view clinic TV display board, and export CSV reports.</p>
+            <a href="admin.html" class="btn btn-outline btn-sm" style="width:100%;">Open Reception Desk &rarr;</a>
+        </div>
+    </div>
+
+    <!-- HOW IT WORKS -->
+    <div id="how-it-works" style="margin-bottom:3.5rem;">
+        <div style="text-align:center; max-width:650px; margin:0 auto 2.5rem;">
+            <h2 style="font-size:2rem; font-weight:800; color:#0f172a; margin-bottom:0.5rem;">The 4-Step Patient Journey</h2>
+            <p style="color:#64748b;">Flow: Book &rarr; Token &rarr; Live Queue &rarr; Video Consultation</p>
+        </div>
+
+        <div class="grid-2" style="grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));">
+            <div class="card" style="text-align:center; padding:1.75rem;">
+                <div style="width:48px; height:48px; background:#e0f2fe; color:#0284c7; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.3rem; font-weight:800; margin:0 auto 1rem;">1</div>
+                <h3 style="font-size:1.1rem; color:#0f172a; margin-bottom:0.4rem;">Select Doctor</h3>
+                <p style="color:#64748b; font-size:0.875rem;">Choose a doctor and date. Dynamic capacity and shift hours are automatically computed.</p>
+            </div>
+            <div class="card" style="text-align:center; padding:1.75rem;">
+                <div style="width:48px; height:48px; background:#ccfbf1; color:#0f766e; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.3rem; font-weight:800; margin:0 auto 1rem;">2</div>
+                <h3 style="font-size:1.1rem; color:#0f172a; margin-bottom:0.4rem;">Sequential Token</h3>
+                <p style="color:#64748b; font-size:0.875rem;">Receive an atomic, sequential daily token number (#1, #2...) with estimated meeting time.</p>
+            </div>
+            <div class="card" style="text-align:center; padding:1.75rem;">
+                <div style="width:48px; height:48px; background:#fef3c7; color:#b45309; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.3rem; font-weight:800; margin:0 auto 1rem;">3</div>
+                <h3 style="font-size:1.1rem; color:#0f172a; margin-bottom:0.4rem;">Live Queue Updates</h3>
+                <p style="color:#64748b; font-size:0.875rem;">Track live serving status and tokens ahead. Hear audio chime alert when called.</p>
+            </div>
+            <div class="card" style="text-align:center; padding:1.75rem;">
+                <div style="width:48px; height:48px; background:#dcfce7; color:#15803d; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.3rem; font-weight:800; margin:0 auto 1rem;">4</div>
+                <h3 style="font-size:1.1rem; color:#0f172a; margin-bottom:0.4rem;">Video Consultation</h3>
+                <p style="color:#64748b; font-size:0.875rem;">Video room link unlocks automatically when your token is NEXT or SERVING.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- SPECIALISTS DIRECTORY -->
+    <div id="doctors">
+        <div style="margin-bottom:1.5rem;">
+            <h2 style="font-size:1.85rem; font-weight:800; color:#0f172a;">Available Medical Specialists</h2>
+            <p style="color:#64748b;">Consult online with top healthcare professionals</p>
+        </div>
+
+        <div class="grid-2" id="doctors-container"></div>
+    </div>
+</main>
+
+<footer class="footer">
+    <div style="max-width:1240px; margin:0 auto; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
+        <div><strong>DoctorConnect</strong> &copy; 2026 &mdash; Token-Based Telehealth Platform (Frontend Standalone)</div>
+        <div><span class="pulse-dot"></span> State Engine Active (Local Storage Sync)</div>
+    </div>
+</footer>
+
+<script src="js/app.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const state = DCStore.load();
+    const container = document.getElementById('doctors-container');
+
+    container.innerHTML = state.doctors.map(d => `
+        <div class="card" style="display:flex; flex-direction:column; justify-content:space-between;">
+            <div>
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.75rem;">
+                    <div>
+                        <span class="badge" style="background:#e0f2fe; color:#0284c7; font-weight:700;">${d.specialization}</span>
+                        <h3 style="font-size:1.25rem; font-weight:700; color:#0f172a; margin-top:0.35rem;">${d.name}</h3>
+                    </div>
+                    <div style="text-align:right;">
+                        <div style="font-size:1.35rem; font-weight:800; color:#0f766e;">$${d.fee.toFixed(2)}</div>
+                        <div style="font-size:0.75rem; color:#64748b;">consultation</div>
+                    </div>
+                </div>
+
+                <p style="color:#475569; font-size:0.9rem; line-height:1.5; margin-bottom:1rem;">${d.bio}</p>
+
+                <div style="background:#f8fafc; padding:0.6rem 0.9rem; border-radius:6px; font-size:0.8rem; color:#64748b; margin-bottom:1.25rem;">
+                    ⏱ <strong>Avg Duration:</strong> ${d.avg_mins} mins &nbsp;|&nbsp; 🕒 <strong>Hours:</strong> ${d.start_time} - ${d.end_time}
+                </div>
+            </div>
+
+            <div style="border-top:1px solid #f1f5f9; padding-top:1rem; display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-size:0.85rem; color:#10b981; font-weight:600;">● Accepting Tokens Today</span>
+                <a href="patient.html?doctor_id=${d.id}&book=1" class="btn btn-primary btn-sm">
+                    Book Token &rarr;
+                </a>
+            </div>
+        </div>
+    `).join('');
+});
+</script>
+
+</body>
+</html>

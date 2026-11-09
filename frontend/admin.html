@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reception & Admin Portal - DoctorConnect</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .tv-monitor-mode {
+            background-color: #0b1120 !important;
+            color: #ffffff !important;
+        }
+        .tv-card {
+            background: #1e293b;
+            border: 2px solid #334155;
+            border-radius: 14px;
+            padding: 1.5rem;
+            color: white;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+        }
+    </style>
+</head>
+<body>
+
+<!-- TOP ROLE SWITCHER BAR -->
+<div class="demo-top-bar">
+    <div style="display:flex; align-items:center; gap:8px;">
+        <span style="background:#eab308; color:#0f172a; padding:1px 6px; border-radius:4px; font-weight:700;">ADMIN / RECEPTION</span>
+        <span>Operations Console &bull; Full Clinic Telemetry</span>
+    </div>
+    <div class="role-pills">
+        <a href="patient.html" class="role-pill" style="background:#0284c7; color:white;">Patient Waiting Room 👤</a>
+        <a href="doctor.html" class="role-pill" style="background:#0d9488; color:white;">Doctor Console 🩺</a>
+        <a href="index.html" class="role-pill" style="background:#334155; color:white;">Home</a>
+    </div>
+</div>
+
+<!-- NAVBAR -->
+<header class="navbar">
+    <div class="nav-container">
+        <a href="index.html" class="brand">
+            <div class="brand-icon">⚕</div>
+            <div>Doctor<span>Connect</span></div>
+        </a>
+        <nav>
+            <ul class="nav-links">
+                <li><a href="javascript:void(0)" class="nav-tab-btn active" onclick="switchAdminTab('reception')">Reception Console</a></li>
+                <li><a href="javascript:void(0)" class="nav-tab-btn" onclick="switchAdminTab('monitor')">📺 Waiting Room TV Board</a></li>
+                <li><a href="javascript:void(0)" class="nav-tab-btn" onclick="switchAdminTab('reports')">Reports & CSV Export</a></li>
+                <li><a href="javascript:void(0)" class="nav-tab-btn" onclick="switchAdminTab('doctors')">Doctor Roster</a></li>
+                <li><a href="javascript:void(0)" class="nav-tab-btn" onclick="switchAdminTab('settings')">Settings</a></li>
+            </ul>
+        </nav>
+    </div>
+</header>
+
+<main class="main-content">
+    <!-- TAB 1: RECEPTION DESK -->
+    <div id="admin-tab-reception" class="admin-pane">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; flex-wrap:wrap; gap:1rem;">
+            <div>
+                <h1 style="font-size:1.75rem; font-weight:800; color:#0f172a; margin-bottom:0.25rem;">
+                    Reception Desk & Queue Controller
+                </h1>
+                <p style="color:#64748b; font-size:0.9rem; margin:0;" id="reception-active-doc-label">
+                    Managing queues across all active clinic doctors
+                </p>
+            </div>
+            <div style="display:flex; gap:0.75rem;">
+                <button type="button" class="btn btn-outline" onclick="openAdminWalkinModal()">
+                    + Issue Walk-In Token
+                </button>
+                <button type="button" class="btn btn-primary btn-lg" onclick="triggerAdminCallNext()">
+                    📢 Call Next Token &rarr;
+                </button>
+            </div>
+        </div>
+
+        <!-- DOCTOR SELECTOR TABS -->
+        <div style="display:flex; gap:0.5rem; overflow-x:auto; padding-bottom:0.5rem; margin-bottom:1.25rem;" id="reception-doc-tabs"></div>
+
+        <!-- 4 KPIS -->
+        <div class="stats-grid">
+            <div class="stat-card stat-success">
+                <div class="stat-icon">👨‍⚕️</div>
+                <div>
+                    <div id="admin-kpi-serving" class="stat-val" style="color:#059669;">-</div>
+                    <div class="stat-label">Currently Serving</div>
+                </div>
+            </div>
+
+            <div class="stat-card stat-warning">
+                <div class="stat-icon">⏭</div>
+                <div>
+                    <div id="admin-kpi-next" class="stat-val" style="color:#d97706;">-</div>
+                    <div class="stat-label">Next in Line</div>
+                </div>
+            </div>
+
+            <div class="stat-card stat-primary">
+                <div class="stat-icon">⏳</div>
+                <div>
+                    <div id="admin-kpi-waiting" class="stat-val" style="color:#0284c7;">-</div>
+                    <div class="stat-label">Patients Waiting</div>
+                </div>
+            </div>
+
+            <div class="stat-card stat-primary">
+                <div class="stat-icon">✓</div>
+                <div>
+                    <div id="admin-kpi-completed" class="stat-val" style="color:#475569;">-</div>
+                    <div class="stat-label">Served Today</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- QUEUE TABLE -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Doctor Queue Roster</h3>
+                <span style="font-size:0.8rem; color:#64748b;">Live Sub-2s Sync</span>
+            </div>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th style="width:90px;">Token #</th>
+                            <th>Patient Name</th>
+                            <th>Contact</th>
+                            <th>Est. Time</th>
+                            <th>Status</th>
+                            <th>Reception Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="reception-table-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 2: WAITING ROOM TV MONITOR -->
+    <div id="admin-tab-monitor" class="admin-pane" style="display:none;">
+        <div style="background:#0f172a; color:white; border-radius:12px; padding:1.5rem 2rem; margin-bottom:1.5rem; display:flex; justify-content:space-between; align-items:center;">
+            <div>
+                <h2 style="font-size:1.5rem; font-weight:800; margin:0;">Waiting Room TV Display Screen</h2>
+                <div style="font-size:0.85rem; color:#94a3b8; display:flex; align-items:center; gap:6px; margin-top:4px;">
+                    <span class="pulse-dot"></span> Live Queue Station &bull; Multi-Doctor Sync
+                </div>
+            </div>
+            <div style="font-size:1.75rem; font-family:monospace; font-weight:800; color:#38bdf8;" id="tv-clock">--:--:--</div>
+        </div>
+
+        <div class="grid-2" id="tv-grid-container"></div>
+    </div>
+
+    <!-- TAB 3: REPORTS & CSV EXPORT -->
+    <div id="admin-tab-reports" class="admin-pane" style="display:none;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; flex-wrap:wrap; gap:1rem;">
+            <div>
+                <h1 style="font-size:1.75rem; font-weight:800; color:#0f172a; margin-bottom:0.25rem;">Analytics & Reports</h1>
+                <p style="color:#64748b; font-size:0.9rem; margin:0;">Consultation metrics, no-show rate analytics, and data download</p>
+            </div>
+            <button class="btn btn-teal btn-lg" onclick="exportCSV()">
+                📥 Download CSV Report
+            </button>
+        </div>
+
+        <!-- 4 KPIS -->
+        <div class="stats-grid">
+            <div class="stat-card stat-primary">
+                <div class="stat-icon">📊</div>
+                <div>
+                    <div class="stat-val" id="rep-kpi-total">-</div>
+                    <div class="stat-label">Total Bookings</div>
+                </div>
+            </div>
+
+            <div class="stat-card stat-success">
+                <div class="stat-icon">✓</div>
+                <div>
+                    <div class="stat-val" id="rep-kpi-completed" style="color:#059669;">-</div>
+                    <div class="stat-label">Completed Rate</div>
+                </div>
+            </div>
+
+            <div class="stat-card stat-danger">
+                <div class="stat-icon">⚠️</div>
+                <div>
+                    <div class="stat-val" id="rep-kpi-noshow" style="color:#dc2626;">-</div>
+                    <div class="stat-label">No-Show Rate</div>
+                </div>
+            </div>
+
+            <div class="stat-card stat-primary">
+                <div class="stat-icon">💵</div>
+                <div>
+                    <div class="stat-val" id="rep-kpi-revenue" style="color:#0f766e;">-</div>
+                    <div class="stat-label">Estimated Revenue</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">All Consultation Records</h3>
+            </div>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Token #</th>
+                            <th>Patient Name</th>
+                            <th>Doctor ID</th>
+                            <th>Status</th>
+                            <th>Diagnosis</th>
+                        </tr>
+                    </thead>
+                    <tbody id="reports-table-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 4: DOCTOR ROSTER -->
+    <div id="admin-tab-doctors" class="admin-pane" style="display:none;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+            <div>
+                <h1 style="font-size:1.75rem; font-weight:800; color:#0f172a; margin-bottom:0.25rem;">Doctor Roster & Specialties</h1>
+                <p style="color:#64748b; font-size:0.9rem; margin:0;">Configure specialist profiles, consultation rates, and hours</p>
+            </div>
+            <button class="btn btn-primary" onclick="openAddDoctorModal()">+ Register Doctor</button>
+        </div>
+
+        <div class="card">
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Doctor Name</th>
+                            <th>Specialization</th>
+                            <th>Consultation Fee</th>
+                            <th>Avg Duration</th>
+                            <th>Hours</th>
+                        </tr>
+                    </thead>
+                    <tbody id="doctors-roster-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 5: SETTINGS -->
+    <div id="admin-tab-settings" class="admin-pane" style="display:none; max-width:700px; margin:0 auto;">
+        <div class="card">
+            <h2 style="font-size:1.35rem; font-weight:800; color:#0f172a; margin-bottom:1rem; border-bottom:1px solid #f1f5f9; padding-bottom:0.5rem;">Clinic Settings</h2>
+            <form onsubmit="handleSaveSettings(event)">
+                <div class="form-group">
+                    <label class="form-label">Clinic Name</label>
+                    <input type="text" id="set_name" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Tagline</label>
+                    <input type="text" id="set_tagline" class="form-control">
+                </div>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label class="form-label">Phone</label>
+                        <input type="tel" id="set_phone" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Email</label>
+                        <input type="email" id="set_email" class="form-control">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Address</label>
+                    <input type="text" id="set_address" class="form-control">
+                </div>
+                <div style="margin-top:1.5rem; text-align:right;">
+                    <button type="submit" class="btn btn-primary">Save Settings</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</main>
+
+<!-- WALK-IN MODAL -->
+<div id="admin-walkin-modal" class="modal-overlay">
+    <div class="modal-box">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem;">
+            <h3 style="margin:0; font-size:1.2rem; font-weight:800;">Issue Walk-In Token</h3>
+            <button type="button" onclick="closeAdminWalkinModal()" style="background:none; border:none; font-size:1.5rem; cursor:pointer;">&times;</button>
+        </div>
+
+        <form onsubmit="handleAdminWalkin(event)">
+            <div class="form-group">
+                <label class="form-label">Patient Name *</label>
+                <input type="text" id="admin_walkin_name" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Phone Number</label>
+                <input type="tel" id="admin_walkin_phone" class="form-control" placeholder="+1 555-0000">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Reason for Visit</label>
+                <input type="text" id="admin_walkin_reason" class="form-control">
+            </div>
+            <div style="display:flex; justify-content:flex-end; gap:0.5rem; margin-top:1.5rem;">
+                <button type="button" class="btn btn-outline" onclick="closeAdminWalkinModal()">Cancel</button>
+                <button type="submit" class="btn btn-teal">Issue Token &rarr;</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ADD DOCTOR MODAL -->
+<div id="admin-doctor-modal" class="modal-overlay">
+    <div class="modal-box">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem;">
+            <h3 style="margin:0; font-size:1.2rem; font-weight:800;">Register New Doctor</h3>
+            <button type="button" onclick="closeAddDoctorModal()" style="background:none; border:none; font-size:1.5rem; cursor:pointer;">&times;</button>
+        </div>
+
+        <form onsubmit="handleAddDoctor(event)">
+            <div class="form-group">
+                <label class="form-label">Doctor Name *</label>
+                <input type="text" id="new_doc_name" class="form-control" required placeholder="e.g. Dr. Jane Carter">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Specialization *</label>
+                <input type="text" id="new_doc_spec" class="form-control" required placeholder="e.g. ENT, Neurology...">
+            </div>
+            <div class="grid-2">
+                <div class="form-group">
+                    <label class="form-label">Fee ($)</label>
+                    <input type="number" id="new_doc_fee" class="form-control" value="50" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Avg Duration (Mins)</label>
+                    <input type="number" id="new_doc_mins" class="form-control" value="15" required>
+                </div>
+            </div>
+            <div style="display:flex; justify-content:flex-end; gap:0.5rem; margin-top:1.5rem;">
+                <button type="button" class="btn btn-outline" onclick="closeAddDoctorModal()">Cancel</button>
+                <button type="submit" class="btn btn-teal">Add Doctor</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<footer class="footer">
+    <div style="max-width:1240px; margin:0 auto; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
+        <div><strong>DoctorConnect</strong> &copy; 2026 &mdash; Token-Based Telehealth Platform (Frontend Standalone)</div>
+        <div><span class="pulse-dot"></span> State Engine Active (Local Storage Sync)</div>
+    </div>
+</footer>
+
+<script src="js/app.js"></script>
+<script>
+let selectedReceptionDocId = 1;
+
+function switchAdminTab(tabName) {
+    document.querySelectorAll('.admin-pane').forEach(el => el.style.display = 'none');
+    document.querySelectorAll('.nav-tab-btn').forEach(el => el.classList.remove('active'));
+
+    document.getElementById(`admin-tab-${tabName}`).style.display = 'block';
+    const btn = Array.from(document.querySelectorAll('.nav-tab-btn')).find(el => el.textContent.toLowerCase().includes(tabName));
+    if (btn) btn.classList.add('active');
+
+    renderAdmin();
+}
+
+function renderAdmin() {
+    const state = DCStore.load();
+    const today = new Date().toISOString().split('T')[0];
+
+    // 1. Reception Tabs
+    const tabsContainer = document.getElementById('reception-doc-tabs');
+    if (tabsContainer) {
+        tabsContainer.innerHTML = state.doctors.map(d => `
+            <button class="btn btn-sm ${d.id === selectedReceptionDocId ? 'btn-primary' : 'btn-outline'}" onclick="selectedReceptionDocId=${d.id}; renderAdmin();" style="white-space:nowrap;">
+                ${d.name} (${d.specialization})
+            </button>
+        `).join('');
+    }
+
+    const q = QueueEngine.getDoctorQueue(selectedReceptionDocId, today);
+    const activeDoc = state.doctors.find(d => d.id === selectedReceptionDocId) || state.doctors[0];
+    document.getElementById('reception-active-doc-label').textContent = `Managing Queue for ${activeDoc.name} (${activeDoc.specialization})`;
+
+    document.getElementById('admin-kpi-serving').textContent = q.current_serving_token ? '#' + q.current_serving_token : 'None';
+    document.getElementById('admin-kpi-next').textContent = q.next_waiting_token ? '#' + q.next_waiting_token : 'None';
+    document.getElementById('admin-kpi-waiting').textContent = q.waiting_count;
+    document.getElementById('admin-kpi-completed').textContent = q.completed_count;
+
+    // Table
+    const tbody = document.getElementById('reception-table-body');
+    if (tbody) {
+        tbody.innerHTML = q.tokens.map(t => `
+            <tr style="${t.status === 'serving' ? 'background:#ecfdf5;' : ''}">
+                <td><strong style="color:#0284c7; font-size:1.1rem;">#${t.token_number}</strong></td>
+                <td><strong>${t.patient_name}</strong><br><span style="font-size:0.8rem; color:#64748b;">${t.reason || ''}</span></td>
+                <td>${t.patient_phone}</td>
+                <td>${t.estimated_time.split(' ')[1]}</td>
+                <td><span class="badge badge-${t.status}">${t.status.toUpperCase()} ${t.status === 'serving' ? '<span class="pulse-dot"></span>' : ''}</span></td>
+                <td>
+                    ${t.status === 'waiting' ? `
+                        <button class="btn btn-sm btn-primary" onclick="setAdminTokenStatus(${t.id}, 'serving')">Call</button>
+                        <button class="btn btn-sm btn-outline" onclick="setAdminTokenStatus(${t.id}, 'no_show')">No-Show</button>
+                    ` : (t.status === 'serving' ? `
+                        <button class="btn btn-sm btn-outline" onclick="setAdminTokenStatus(${t.id}, 'completed')">Mark Served</button>
+                    ` : '-')}
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    // 2. TV Monitor
+    const tvContainer = document.getElementById('tv-grid-container');
+    if (tvContainer) {
+        tvContainer.innerHTML = state.doctors.map(d => {
+            const dq = QueueEngine.getDoctorQueue(d.id, today);
+            return `
+                <div class="tv-card">
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                        <div>
+                            <span class="badge" style="background:#0284c7; color:white;">${d.specialization}</span>
+                            <h3 style="font-size:1.35rem; margin-top:4px;">${d.name}</h3>
+                        </div>
+                        ${dq.current_serving_token ? '<span class="badge badge-serving"><span class="pulse-dot"></span> SERVING</span>' : ''}
+                    </div>
+
+                    <div style="background:linear-gradient(135deg, #0284c7, #0d9488); border-radius:12px; padding:1.25rem; text-align:center; margin:1.25rem 0;">
+                        <div style="font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:#e0f2fe;">NOW SERVING</div>
+                        <div style="font-size:3.5rem; font-weight:900; line-height:1.1;">
+                            ${dq.current_serving_token ? '#' + dq.current_serving_token : '---'}
+                        </div>
+                        <div style="font-size:0.9rem; color:#f0fdf4; margin-top:2px;">
+                            ${dq.current_serving ? dq.current_serving.patient_name : 'Waiting for next patient'}
+                        </div>
+                    </div>
+
+                    <div style="display:flex; justify-content:space-between; background:#0f172a; padding:0.75rem 1rem; border-radius:8px; font-size:0.9rem;">
+                        <div><span style="color:#94a3b8; font-size:0.75rem; display:block;">NEXT IN LINE</span><strong style="color:#f59e0b; font-size:1.1rem;">${dq.next_waiting_token ? '#' + dq.next_waiting_token : 'None'}</strong></div>
+                        <div style="text-align:right;"><span style="color:#94a3b8; font-size:0.75rem; display:block;">WAITING</span><strong style="color:#38bdf8; font-size:1.1rem;">${dq.waiting_count} patients</strong></div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    // 3. Reports
+    const totalAppts = state.appointments.length;
+    const completedAppts = state.appointments.filter(a => a.status === 'completed').length;
+    const noShowAppts = state.appointments.filter(a => a.status === 'no_show').length;
+    let rev = 0;
+    state.appointments.filter(a => a.status === 'completed').forEach(a => {
+        const doc = state.doctors.find(d => d.id === a.doctor_id);
+        if (doc) rev += doc.fee;
+    });
+
+    document.getElementById('rep-kpi-total').textContent = totalAppts;
+    document.getElementById('rep-kpi-completed').textContent = `${completedAppts} (${totalAppts ? Math.round((completedAppts/totalAppts)*100) : 0}%)`;
+    document.getElementById('rep-kpi-noshow').textContent = `${noShowAppts} (${totalAppts ? Math.round((noShowAppts/totalAppts)*100) : 0}%)`;
+    document.getElementById('rep-kpi-revenue').textContent = `$${rev.toFixed(2)}`;
+
+    const repTbody = document.getElementById('reports-table-body');
+    if (repTbody) {
+        repTbody.innerHTML = state.appointments.map(a => `
+            <tr>
+                <td>${a.date}</td>
+                <td><strong style="color:#0284c7;">#${a.token_number}</strong></td>
+                <td>${a.patient_name}</td>
+                <td>Doctor #${a.doctor_id}</td>
+                <td><span class="badge badge-${a.status}">${a.status.toUpperCase()}</span></td>
+                <td>${a.diagnosis || '-'}</td>
+            </tr>
+        `).join('');
+    }
+
+    // 4. Doctor Roster
+    const docTbody = document.getElementById('doctors-roster-body');
+    if (docTbody) {
+        docTbody.innerHTML = state.doctors.map(d => `
+            <tr>
+                <td>#${d.id}</td>
+                <td><strong>${d.name}</strong></td>
+                <td><span class="badge" style="background:#e0f2fe; color:#0284c7;">${d.specialization}</span></td>
+                <td>$${d.fee.toFixed(2)}</td>
+                <td>${d.avg_mins} mins</td>
+                <td>${d.start_time} - ${d.end_time}</td>
+            </tr>
+        `).join('');
+    }
+
+    // 5. Settings
+    document.getElementById('set_name').value = state.clinic_settings.clinic_name;
+    document.getElementById('set_tagline').value = state.clinic_settings.clinic_tagline;
+    document.getElementById('set_phone').value = state.clinic_settings.clinic_phone;
+    document.getElementById('set_email').value = state.clinic_settings.clinic_email;
+    document.getElementById('set_address').value = state.clinic_settings.clinic_address;
+}
+
+function triggerAdminCallNext() {
+    const res = QueueEngine.callNext(selectedReceptionDocId);
+    alert(res.message);
+    renderAdmin();
+}
+
+function setAdminTokenStatus(id, status) {
+    QueueEngine.setStatus(id, status);
+    renderAdmin();
+}
+
+function openAdminWalkinModal() { document.getElementById('admin-walkin-modal').style.display = 'flex'; }
+function closeAdminWalkinModal() { document.getElementById('admin-walkin-modal').style.display = 'none'; }
+
+function handleAdminWalkin(e) {
+    e.preventDefault();
+    const name = document.getElementById('admin_walkin_name').value.trim();
+    const phone = document.getElementById('admin_walkin_phone').value.trim();
+    const reason = document.getElementById('admin_walkin_reason').value.trim();
+    const today = new Date().toISOString().split('T')[0];
+
+    const res = QueueEngine.bookToken(name, phone, selectedReceptionDocId, today, reason);
+    if (res.success) {
+        alert(`✓ Walk-in Token #${res.appointment.token_number} issued successfully for ${name}.`);
+        closeAdminWalkinModal();
+        renderAdmin();
+    }
+}
+
+function openAddDoctorModal() { document.getElementById('admin-doctor-modal').style.display = 'flex'; }
+function closeAddDoctorModal() { document.getElementById('admin-doctor-modal').style.display = 'none'; }
+
+function handleAddDoctor(e) {
+    e.preventDefault();
+    const state = DCStore.load();
+    const newDoc = {
+        id: state.doctors.length + 1,
+        name: document.getElementById('new_doc_name').value.trim(),
+        specialization: document.getElementById('new_doc_spec').value.trim(),
+        fee: parseFloat(document.getElementById('new_doc_fee').value) || 50,
+        avg_mins: parseInt(document.getElementById('new_doc_mins').value, 10) || 15,
+        start_time: '09:00',
+        end_time: '17:00',
+        bio: 'Board-certified medical specialist.'
+    };
+    state.doctors.push(newDoc);
+    DCStore.save(state);
+    alert(`Doctor ${newDoc.name} registered.`);
+    closeAddDoctorModal();
+    renderAdmin();
+}
+
+function handleSaveSettings(e) {
+    e.preventDefault();
+    const state = DCStore.load();
+    state.clinic_settings.clinic_name = document.getElementById('set_name').value.trim();
+    state.clinic_settings.clinic_tagline = document.getElementById('set_tagline').value.trim();
+    state.clinic_settings.clinic_phone = document.getElementById('set_phone').value.trim();
+    state.clinic_settings.clinic_email = document.getElementById('set_email').value.trim();
+    state.clinic_settings.clinic_address = document.getElementById('set_address').value.trim();
+    DCStore.save(state);
+    alert('Clinic settings updated.');
+    renderAdmin();
+}
+
+// Clock
+setInterval(() => {
+    const el = document.getElementById('tv-clock');
+    if (el) el.textContent = new Date().toLocaleTimeString();
+}, 1000);
+
+// Auto-sync
+window.addEventListener('storage', renderAdmin);
+window.addEventListener('dc_state_updated', renderAdmin);
+setInterval(renderAdmin, 2000);
+
+document.addEventListener('DOMContentLoaded', renderAdmin);
+</script>
+
+</body>
+</html>
